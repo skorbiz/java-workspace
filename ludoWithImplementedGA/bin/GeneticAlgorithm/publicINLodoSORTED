@@ -1,0 +1,155 @@
+	public int getDice() {
+		return dice;
+	}
+	/**
+	 * Move one of your bricks numbered from 0-3.
+	 * 
+	 * @param nr of brick in question.
+	 * @return true if the move was possible otherwise on brick has been moved
+	 */
+	public boolean moveBrick(int nr) 
+	/**
+	 * Get the index-positions of the bricks if a particular brick, 
+	 * of a given number and color is moved a given a dice value. 
+	 * 
+	 * This method does not change the actual state of the board game, 
+	 * but gives the ability to explore "what if situations". 
+	 * 
+	 * @param nr number of brick
+	 * @param color Yellow, red, blue or green (static fields on this class)
+	 * @param dice - value of dice (needs not be the same as the "real" dice)
+	 * @return index-positions of bricks
+	 */
+	public int[][] getNewBoardState(int nr, int color, int dice2) 
+	/**
+	 * Get the index-positions of the bricks, given the boardState, if a particular brick, 
+	 * of a given number and color is moved a given a dice value. 
+	 * 
+	 * This method does not change the actual state of the board game, 
+	 * but gives the ability to explore "what if situations". 
+	 * 
+	 * @param boardState index-positions of bricks
+	 * @param nr number of brick
+	 * @param color Yellow, red, blue or green (static fields on this class)
+	 * @param dice - value of dice (needs not be the same as the "real" dice)
+	 * @return index-positions of bricks
+	 */
+	public int[][] getNewBoardState(int[][] boardState,int nr, int color, int dice2)
+	/**
+	 * get Bricks positions(board state)
+	 * @return index array of all 16 bricks indexs as this: bricks[color][nr] 
+	 */
+	public int[][] getBoardState() {
+		int[][] bs = new int[4][4];
+		for(int i=0;i<4;i++) {
+			for(int j=0;j<4;j++) {
+				bs[i][j] = bricks[i][j];
+			}
+		}
+		return bs;
+	}
+	/**
+	 * If brick corresponding to color and nr are in starting area.
+	 * @param index
+	 * @param color
+	 * @return
+	 */
+	public boolean inStartArea(int index, int color) {
+		return index>=(color+1)*100&&index<=(((color+1)*100)+3);
+	}
+	/**
+	 * If index corresponding to color are in home area(brick completed game).
+	 * @param index
+	 * @param color
+	 * @return
+	 */
+	public boolean atHome(int index, int color) {
+		return index==((color+1)*100+9);
+	}
+	/**
+	 * If a given index corresponding to color are in colored(safe) area close to home.
+	 * @param index
+	 * @param color
+	 * @return
+	 */
+	public boolean almostHome(int index, int color) {
+		return index>=((color+1)*100+4)&&index<((color+1)*100+9);
+	}
+	/**
+	 * if a given index is at the field(white) area.
+	 * @param index
+	 * @return
+	 */
+	public boolean atField(int index) {
+		return index<100;
+	}
+	/**
+	 * if index is a globe
+	 * @param index
+	 * @return
+	 */
+	public boolean isGlobe(int index)
+	/**
+	 * if index is a star
+	 * @param index
+	 * @return
+	 */
+	public boolean isStar(int index)
+	/**
+	 * Print something to the graphical interface. 
+	 * @param str
+	 */
+	public void print(String str)
+	/**
+	 * Get index-positions of your bricks. 
+	 * @return
+	 */
+	public int[] getMyBricks() {
+		int[] b = new int[4];
+		b[0] = bricks[currentColor][0];
+		b[1] = bricks[currentColor][1];
+		b[2] = bricks[currentColor][2];
+		b[3] = bricks[currentColor][3];
+		return b; 
+	}
+	/**
+	 * Get your color. 
+	 * @return
+	 */
+	public int getMyColor() {
+		return currentColor;
+	}
+	/**
+	 * Get points for completed game indexed as: points[color]
+	 * points are given from 3 to 0, 3 for a win, 0 for a loose.
+	 * @return
+	 */
+	public int[] getPoints() {
+		return points;
+	}
+	/**
+	 * Number of turns left of the current player
+	 * @return
+	 */
+	public int getTurns() {
+		return turns;
+	}
+	/**
+	 * Kill the current game
+	 *
+	 */
+	public void kill()
+	/**
+	 * Start a game between four players
+	 * 
+	 * @throws InterruptedException
+	 */
+	public void play()
+	public void addGameEndedListener(GameEndedListener listener){
+		gameEndedListeners.add(listener);
+	}
+	public void removeGameEndedListener(GameEndedListener listener){
+		gameEndedListeners.remove(listener);
+	}
+	public static void trap()
+}

@@ -1,0 +1,150 @@
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.util.Scanner;
+
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.TargetDataLine;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.Mixer;
+import javax.sound.sampled.AudioFileFormat;
+
+public class AudioLoopClient extends Thread
+{
+	private static boolean	DEBUG = true;
+
+	// DEFAULT VALUES //////////////////////////////////////////
+	private static final int 	DEFAULT_N_BUFFERSIZE = 40960;
+	private static final double DEFAULT_T_DELAY = 5.00;
+	private static final float 	DEFAULT_F_FRAMERATE = 44100.0F;
+	private static final String DEFAULT_STR_IPADRESS = "192.168.1.108";
+
+	// DEFINED VALUES //////////////////////////////////////////
+	private static final int 	nBufferSize = DEFAULT_N_BUFFERSIZE;
+	private static final float 	fFrameRate = DEFAULT_F_FRAMERATE;
+	private static final double tDelay = 3.00;
+	private static final String strIpAdress = DEFAULT_STR_IPADRESS;
+	
+	// GLOBAL VARIABLES /////////////////////////////////////////
+	private TargetDataLine	m_targetLine;
+	private SourceDataLine	m_sourceLine;
+	
+	/****************** GET METHODES ****************************************************************************/
+	/************************************************************************************************************/
+	public static int getBufferSize()
+	{	
+		return nBufferSize;	
+	}
+	
+	public static float getfFrameRate()
+	{
+		return fFrameRate;
+	}
+	
+	/****************** CONSTRUCTER *****************************************************************************/
+	/************************************************************************************************************/
+	
+	public AudioLoopClient() throws LineUnavailableException
+	{
+		AudioFormat	audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, fFrameRate, 16, 2, 4, fFrameRate, false);		
+		
+		DataLine.Info	targetInfo = new DataLine.Info(TargetDataLine.class, audioFormat, nBufferSize);
+		m_targetLine = (TargetDataLine) AudioSystem.getLine(targetInfo);
+		m_targetLine.open(audioFormat, nBufferSize);
+		
+		DataLine.Info	sourceInfo = new DataLine.Info(SourceDataLine.class, audioFormat, nBufferSize);
+		m_sourceLine = (SourceDataLine) AudioSystem.getLine(sourceInfo);
+		m_sourceLine.open(audioFormat, nBufferSize);
+	}
+
+	/******************  SUPPORT METHODES ***********************************************************************/
+	/************************************************************************************************************/
+	
+	private int calculateBufferSize()
+	{
+		if(tDelay == 0)
+			return 1;
+		double dataGeneratedPrSec = fFrameRate*2*2;								//[bytes/sec]	16bit stereo
+		double dataGeneratedInCycle = dataGeneratedPrSec * tDelay;				//[bytes]
+		int numberOfArraysNeeded = (int) dataGeneratedInCycle/nBufferSize;
+		return numberOfArraysNeeded;
+	}
+	
+	private void transmitSoundPackage(byte[] abBuffer)
+	{
+		try 
+		{
+			DatagramSocket clientSocket;
+			clientSocket = new DatagramSocket();
+			InetAddress ipAdr = InetAddress.getByName(strIpAdress);
+			DatagramPacket packet = new DatagramPacket(abBuffer, abBuffer.length, ipAdr, 9876);
+			clientSocket.send(packet);
+			clientSocket.close();
+		} catch (SocketException e) { System.out.println("Faild to create network connection"); e.printStackTrace();
+		} catch (IOException e) { System.out.println("Faild to create network connection"); e.printStackTrace();
+		}
+	}
+	
+	/****************** RUN / START METHODE *********************************************************************/
+	/************************************************************************************************************/
+
+	public void start()
+	{
+		m_targetLine.start();
+		super.start();
+	}
+	
+	public void run()
+	{	
+		int sizeDelay = calculateBufferSize();
+		byte[][] abBuffer = new byte[sizeDelay][nBufferSize];
+
+		int i = 0;
+		while (true)
+		{
+			m_targetLine.read(abBuffer[i], 0, nBufferSize);
+			transmitSoundPackage(abBuffer[(i+1)%sizeDelay]);
+			
+			i = (i+1)%sizeDelay;
+			System.out.println(i);
+			
+		}
+	}
+
+
+	/****************** MAIN METHODE ****************************************************************************/
+	/************************************************************************************************************/
+	
+	public static void main(String[] args)
+	{
+		AudioLoopClient audioLoopClient = null;
+		AudioLoopServer audioLoopServer = null;
+		
+		try 
+		{
+			audioLoopClient = new AudioLoopClient();
+			audioLoopServer = new AudioLoopServer( AudioLoopClient.getBufferSize(), AudioLoopClient.getfFrameRate() );
+
+		} 
+		catch (LineUnavailableException e) 
+		{
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		audioLoopClient.start();
+		audioLoopServer.start();
+
+	}
+
+}
